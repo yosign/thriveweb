@@ -6,9 +6,8 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  images: {
-    unoptimized: true,
-  },
+  // 移除 images.unoptimized 配置，让Vercel处理图片优化
+  // Next.js 15 默认启用 App Router，无需额外配置
 }
 
 export default nextConfig

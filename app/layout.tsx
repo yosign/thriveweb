@@ -22,9 +22,18 @@ const instrumentSerif = Instrument_Serif({
 })
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
-  generator: "v0.app",
+  title: "Thrive Studio - AI-Powered Innovation",
+  description: "Empowering innovation through AI. We create cutting-edge AI applications that transform ideas into reality.",
+  keywords: "AI, artificial intelligence, studio, innovation, development, Next.js",
+  authors: [{ name: "Thrive Studio" }],
+  creator: "Thrive Studio",
+  publisher: "Thrive Studio",
+  openGraph: {
+    title: "Thrive Studio - AI-Powered Innovation",
+    description: "Empowering innovation through AI. We create cutting-edge AI applications that transform ideas into reality.",
+    type: "website",
+    locale: "en_US",
+  },
 }
 
 export default function RootLayout({
