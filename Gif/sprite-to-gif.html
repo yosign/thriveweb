@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精灵图转GIF动画生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 40px;
+            font-size: 24px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 24px;
+            background: white;
+            color: #1a1a1a;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .file-input-label:hover {
+            border-color: #1a1a1a;
+            background: #fafafa;
+        }
+
+        .file-name {
+            color: #666;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .controls {
+            background: #fafafa;
+            padding: 30px;
+            border-radius: 6px;
+            margin-bottom: 40px;
+            border: 1px solid #e8e8e8;
+        }
+
+        .control-group {
+            margin-bottom: 24px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            font-weight: 400;
+            font-size: 13px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 2px;
+            border-radius: 1px;
+            background: #d0d0d0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #1a1a1a;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .value-display {
+            display: inline-block;
+            margin-left: 10px;
+            color: #666;
+            font-weight: 500;
+            min-width: 45px;
+            text-align: right;
+        }
+
+        .preview-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #e8e8e8;
+        }
+
+        canvas {
+            max-width: 100%;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            background: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 24px;
+            border: 1px solid #d0d0d0;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 400;
+            background: white;
+            color: #1a1a1a;
+        }
+
+        button:hover:not(:disabled) {
+            border-color: #1a1a1a;
+            background: #fafafa;
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #1a1a1a;
+            color: white;
+            border-color: #1a1a1a;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #2a2a2a;
+            border-color: #2a2a2a;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 1px solid;
+        }
+
+        .status.info {
+            background: #fafafa;
+            color: #666;
+            border-color: #e0e0e0;
+        }
+
+        .status.success {
+            background: #fafafa;
+            color: #1a1a1a;
+            border-color: #d0d0d0;
+        }
+
+        .status.error {
+            background: #fff5f5;
+            color: #c33;
+            border-color: #fcc;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e8e8e8;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1a1a1a;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>精灵图转 GIF 动画</h1>
+        <p style="text-align: center; color: #666; font-size: 14px; margin-top: 8px;">步骤2: 将精灵图转换为GIF动画</p>
+        
+        <!-- 上传区域 -->
+        <div class="upload-section">
+            <div class="file-input-wrapper">
+                <input type="file" id="imageInput" accept="image/*">
+                <label for="imageInput" class="file-input-label">选择精灵图</label>
+            </div>
+            <div id="fileName" class="file-name"></div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls">
+            <div class="control-group">
+                <label>
+                    帧率 (FPS): <span class="value-display" id="fpsValue">10</span>
+                </label>
+                <input type="range" id="fpsSlider" min="1" max="60" value="10">
+            </div>
+
+            <div class="control-group">
+                <label>
+                    缩放比例: <span class="value-display" id="scaleValue">100%</span>
+                </label>
+                <input type="range" id="scaleSlider" min="10" max="200" value="100">
+            </div>
+        </div>
+
+        <!-- 预览区域 -->
+        <div class="preview-section">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <!-- 按钮组 -->
+        <div class="button-group">
+            <button id="playBtn" disabled>播放</button>
+            <button id="pauseBtn" disabled>暂停</button>
+            <button class="btn-primary" id="generateBtn" disabled>生成 GIF</button>
+            <button class="btn-primary hidden" id="downloadBtn">下载 GIF</button>
+        </div>
+
+        <!-- 状态提示 -->
+        <div id="status" class="status hidden"></div>
+        <div id="progressBar" class="progress-bar hidden">
+            <div id="progressFill" class="progress-fill"></div>
+        </div>
+    </div>
+
+    <script>
+// GIF 编码器库 - 嵌入版本
+(function(global) {
+    var __defProp=Object.defineProperty,__markAsModule=e=>__defProp(e,"__esModule",{value:!0}),__export=(e,t)=>{for(var r in t)__defProp(e,r,{get:t[r],enumerable:!0})};var exports={};__markAsModule(exports),__export(exports,{GIFEncoder:()=>GIFEncoder,applyPalette:()=>applyPalette,default:()=>src_default,nearestColor:()=>nearestColor,nearestColorIndex:()=>nearestColorIndex,nearestColorIndexWithDistance:()=>nearestColorIndexWithDistance,prequantize:()=>prequantize,quantize:()=>quantize,snapColorsToPalette:()=>snapColorsToPalette});var constants_default={signature:"GIF",version:"89a",trailer:59,extensionIntroducer:33,applicationExtensionLabel:255,graphicControlExtensionLabel:249,imageSeparator:44,signatureSize:3,versionSize:3,globalColorTableFlagMask:128,colorResolutionMask:112,sortFlagMask:8,globalColorTableSizeMask:7,applicationIdentifierSize:8,applicationAuthCodeSize:3,disposalMethodMask:28,userInputFlagMask:2,transparentColorFlagMask:1,localColorTableFlagMask:128,interlaceFlagMask:64,idSortFlagMask:32,localColorTableSizeMask:7};function createStream(e=256){let t=0,r=new Uint8Array(e);return{get buffer(){return r.buffer},reset(){t=0},bytesView:()=>r.subarray(0,t),bytes:()=>r.slice(0,t),writeByte(e){n(t+1),r[t]=e,t++},writeBytes(e,o=0,a=e.length){n(t+a);for(let n=0;n<a;n++)r[t++]=e[n+o]},writeBytesView(e,o=0,a=e.byteLength){n(t+a),r.set(e.subarray(o,o+a),t),t+=a}};function n(e){var n=r.length;if(n>=e)return;e=Math.max(e,n*(n<1048576?2:1.125)>>>0),0!=n&&(e=Math.max(e,256));const o=r;r=new Uint8Array(e),t>0&&r.set(o.subarray(0,t),0)}}var BITS=12,DEFAULT_HSIZE=5003,MASKS=[0,1,3,7,15,31,63,127,255,511,1023,2047,4095,8191,16383,32767,65535];function lzwEncode(e,t,r,n,o=createStream(512),a=new Uint8Array(256),i=new Int32Array(DEFAULT_HSIZE),c=new Int32Array(DEFAULT_HSIZE)){const l=i.length,s=Math.max(2,n);a.fill(0),c.fill(0),i.fill(-1);let f=0,u=0;const w=s+1,d=w;let b=!1,g=d,y=(1<<g)-1;const p=1<<w-1,h=p+1;let B=p+2,_=0,m=r[0],I=0;for(let e=l;e<65536;e*=2)++I;I=8-I,o.writeByte(s),S(p);const A=r.length;for(let e=1;e<A;e++)e:{const t=r[e],n=(t<<BITS)+m;let o=t<<I^m;if(i[o]===n){m=c[o];break e}const a=0===o?1:l-o;for(;i[o]>=0;)if(o-=a,o<0&&(o+=l),i[o]===n){m=c[o];break e}S(m),m=t,B<1<<BITS?(c[o]=B++,i[o]=n):(i.fill(-1),B=p+2,b=!0,S(p))}return S(m),S(h),o.writeByte(0),o.bytesView();function S(e){for(f&=MASKS[u],u>0?f|=e<<u:f=e,u+=g;u>=8;)a[_++]=255&f,_>=254&&(o.writeByte(_),o.writeBytesView(a,0,_),_=0),f>>=8,u-=8;if((B>y||b)&&(b?(g=d,y=(1<<g)-1,b=!1):(++g,y=g===BITS?1<<g:(1<<g)-1)),e==h){for(;u>0;)a[_++]=255&f,_>=254&&(o.writeByte(_),o.writeBytesView(a,0,_),_=0),f>>=8,u-=8;_>0&&(o.writeByte(_),o.writeBytesView(a,0,_),_=0)}}}var lzwEncode_default=lzwEncode;function rgb888_to_rgb565(e,t,r){return e<<8&63488|t<<2&992|r>>3}function rgba8888_to_rgba4444(e,t,r,n){return e>>4|240&t|(240&r)<<4|(240&n)<<8}function rgb888_to_rgb444(e,t,r){return e>>4<<8|240&t|r>>4}function clamp(e,t,r){return e<t?t:e>r?r:e}function sqr(e){return e*e}function find_nn(e,t,r){var n=0,o=1e100;const a=e[t],i=a.cnt,c=a.ac,l=a.rc,s=a.gc,f=a.bc;for(var u=a.fw;0!=u;u=e[u].fw){const t=e[u],a=t.cnt,d=i*a/(i+a);if(!(d>=o)){var w=0;r&&(w+=d*sqr(t.ac-c))>=o||(w+=d*sqr(t.rc-l))>=o||(w+=d*sqr(t.gc-s))>=o||(w+=d*sqr(t.bc-f))>=o||(o=w,n=u)}}a.err=o,a.nn=n}function create_bin(){return{ac:0,rc:0,gc:0,bc:0,cnt:0,nn:0,fw:0,bk:0,tm:0,mtm:0,err:0}}function create_bin_list(e,t){const r=new Array("rgb444"===t?4096:65536),n=e.length;if("rgba4444"===t)for(let t=0;t<n;++t){const n=e[t],o=n>>24&255,a=n>>16&255,i=n>>8&255,c=255&n,l=rgba8888_to_rgba4444(c,i,a,o);let s=l in r?r[l]:r[l]=create_bin();s.rc+=c,s.gc+=i,s.bc+=a,s.ac+=o,s.cnt++}else if("rgb444"===t)for(let t=0;t<n;++t){const n=e[t],o=n>>16&255,a=n>>8&255,i=255&n,c=rgb888_to_rgb444(i,a,o);let l=c in r?r[c]:r[c]=create_bin();l.rc+=i,l.gc+=a,l.bc+=o,l.cnt++}else for(let t=0;t<n;++t){const n=e[t],o=n>>16&255,a=n>>8&255,i=255&n,c=rgb888_to_rgb565(i,a,o);let l=c in r?r[c]:r[c]=create_bin();l.rc+=i,l.gc+=a,l.bc+=o,l.cnt++}return r}function quantize(e,t,r={}){const{format:n="rgb565",clearAlpha:o=!0,clearAlphaColor:a=0,clearAlphaThreshold:i=0,oneBitAlpha:c=!1}=r;if(!e||!e.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(e instanceof Uint8Array||e instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");const l=new Uint32Array(e.buffer);let s=!1!==r.useSqrt;const f="rgba4444"===n,u=create_bin_list(l,n),w=u.length,d=w-1,b=new Uint32Array(w+1);for(var g=0,y=0;y<w;++y){const e=u[y];if(null!=e){var p=1/e.cnt;f&&(e.ac*=p),e.rc*=p,e.gc*=p,e.bc*=p,u[g++]=e}}sqr(t)/g<.022&&(s=!1);var h,B,_;for(y=0;y<g-1;++y)u[y].fw=y+1,u[y+1].bk=y,s&&(u[y].cnt=Math.sqrt(u[y].cnt));for(s&&(u[y].cnt=Math.sqrt(u[y].cnt)),y=0;y<g;++y){find_nn(u,y,!1);var m=u[y].err;for(B=++b[0];B>1&&!(u[h=b[_=B>>1]].err<=m);B=_)b[B]=h;b[B]=y}var I=g-t;for(y=0;y<I;){for(var A;;){var S=b[1];if((A=u[S]).tm>=A.mtm&&u[A.nn].mtm<=A.tm)break;A.mtm==d?S=b[1]=b[b[0]--]:(find_nn(u,S,!1),A.tm=y);m=u[S].err;for(B=1;(_=B+B)<=b[0]&&(_<b[0]&&u[b[_]].err>u[b[_+1]].err&&_++,!(m<=u[h=b[_]].err));B=_)b[B]=h;b[B]=S}var x=u[A.nn],C=A.cnt,M=x.cnt;p=1/(C+M);f&&(A.ac=p*(C*A.ac+M*x.ac)),A.rc=p*(C*A.rc+M*x.rc),A.gc=p*(C*A.gc+M*x.gc),A.bc=p*(C*A.bc+M*x.bc),A.cnt+=x.cnt,A.mtm=++y,u[x.bk].fw=x.fw,u[x.fw].bk=x.bk,x.mtm=d}let q=[];var U=0;for(y=0;;++U){let e=clamp(Math.round(u[y].rc),0,255),t=clamp(Math.round(u[y].gc),0,255),r=clamp(Math.round(u[y].bc),0,255),n=255;if(f){if(n=clamp(Math.round(u[y].ac),0,255),c){n=n<=("number"==typeof c?c:127)?0:255}o&&n<=i&&(e=t=r=a,n=0)}const l=f?[e,t,r,n]:[e,t,r];if(existsInPalette(q,l)||q.push(l),0==(y=u[y].fw))break}return q}function existsInPalette(e,t){for(let r=0;r<e.length;r++){const n=e[r];let o=n[0]===t[0]&&n[1]===t[1]&&n[2]===t[2],a=!(n.length>=4&&t.length>=4)||n[3]===t[3];if(o&&a)return!0}return!1}function euclideanDistanceSquared(e,t){var r,n=0;for(r=0;r<e.length;r++){const o=e[r]-t[r];n+=o*o}return n}function roundStep(e,t){return t>1?Math.round(e/t)*t:e}function prequantize(e,{roundRGB:t=5,roundAlpha:r=10,oneBitAlpha:n=null}={}){const o=new Uint32Array(e.buffer);for(let e=0;e<o.length;e++){const a=o[e];let i=a>>24&255,c=a>>16&255,l=a>>8&255,s=255&a;if(i=roundStep(i,r),n){i=i<=("number"==typeof n?n:127)?0:255}s=roundStep(s,t),l=roundStep(l,t),c=roundStep(c,t),o[e]=i<<24|c<<16|l<<8|s}}function applyPalette(e,t,r="rgb565"){if(!e||!e.buffer)throw new Error("quantize() expected RGBA Uint8Array data");if(!(e instanceof Uint8Array||e instanceof Uint8ClampedArray))throw new Error("quantize() expected RGBA Uint8Array data");if(t.length>256)throw new Error("applyPalette() only works with 256 colors or less");const n=new Uint32Array(e.buffer),o=n.length,a="rgb444"===r?4096:65536,i=new Uint8Array(o),c=new Array(a);if("rgba4444"===r)for(let e=0;e<o;e++){const r=n[e],o=r>>24&255,a=r>>16&255,l=r>>8&255,s=255&r,f=rgba8888_to_rgba4444(s,l,a,o),u=f in c?c[f]:c[f]=nearestColorIndexRGBA(s,l,a,o,t);i[e]=u}else{const e="rgb444"===r?rgb888_to_rgb444:rgb888_to_rgb565;for(let r=0;r<o;r++){const o=n[r],a=o>>16&255,l=o>>8&255,s=255&o,f=e(s,l,a),u=f in c?c[f]:c[f]=nearestColorIndexRGB(s,l,a,t);i[r]=u}}return i}function nearestColorIndexRGBA(e,t,r,n,o){let a=0,i=1e100;for(let c=0;c<o.length;c++){const l=o[c];let s=sqr2(l[3]-n);if(s>i)continue;if(s+=sqr2(l[0]-e),s>i)continue;if(s+=sqr2(l[1]-t),s>i)continue;s+=sqr2(l[2]-r),s>i||(i=s,a=c)}return a}function nearestColorIndexRGB(e,t,r,n){let o=0,a=1e100;for(let i=0;i<n.length;i++){const c=n[i];let l=sqr2(c[0]-e);if(l>a)continue;if(l+=sqr2(c[1]-t),l>a)continue;l+=sqr2(c[2]-r),l>a||(a=l,o=i)}return o}function snapColorsToPalette(e,t,r=5){if(!e.length||!t.length)return;const n=e.map((e=>e.slice(0,3))),o=r*r,a=e[0].length;for(let r=0;r<t.length;r++){let i=t[r];i=i.length<a?[i[0],i[1],i[2],255]:i.length>a?i.slice(0,3):i.slice();const c=nearestColorIndexWithDistance(n,i.slice(0,3),euclideanDistanceSquared),l=c[0],s=c[1];s>0&&s<=o&&(e[l]=i)}}function sqr2(e){return e*e}function nearestColorIndex(e,t,r=euclideanDistanceSquared){let n=1/0,o=-1;for(let a=0;a<e.length;a++){const i=r(t,e[a]);i<n&&(n=i,o=a)}return o}function nearestColorIndexWithDistance(e,t,r=euclideanDistanceSquared){let n=1/0,o=-1;for(let a=0;a<e.length;a++){const i=r(t,e[a]);i<n&&(n=i,o=a)}return[o,n]}function nearestColor(e,t,r=euclideanDistanceSquared){return e[nearestColorIndex(e,t,r)]}function GIFEncoder(e={}){const{initialCapacity:t=4096,auto:r=!0}=e,n=createStream(t),o=new Uint8Array(256),a=new Int32Array(5003),i=new Int32Array(5003);let c=!1;return{reset(){n.reset(),c=!1},finish(){n.writeByte(constants_default.trailer)},bytes:()=>n.bytes(),bytesView:()=>n.bytesView(),get buffer(){return n.buffer},get stream(){return n},writeHeader:l,writeFrame(e,t,s,f={}){const{transparent:u=!1,transparentIndex:w=0,delay:d=0,palette:b=null,repeat:g=0,colorDepth:y=8,dispose:p=-1}=f;let h=!1;if(r?c||(h=!0,l(),c=!0):h=Boolean(f.first),t=Math.max(0,Math.floor(t)),s=Math.max(0,Math.floor(s)),h){if(!b)throw new Error("First frame must include a { palette } option");encodeLogicalScreenDescriptor(n,t,s,b,y),encodeColorTable(n,b),g>=0&&encodeNetscapeExt(n,g)}const B=Math.round(d/10);encodeGraphicControlExt(n,p,B,u,w);const _=Boolean(b)&&!h;encodeImageDescriptor(n,t,s,_?b:null),_&&encodeColorTable(n,b),encodePixels(n,e,t,s,y,o,a,i)}};function l(){writeUTFBytes(n,"GIF89a")}}function encodeGraphicControlExt(e,t,r,n,o){var a,i;e.writeByte(33),e.writeByte(249),e.writeByte(4),o<0&&(o=0,n=!1),n?(a=1,i=2):(a=0,i=0),t>=0&&(i=7&t),i<<=2;e.writeByte(i|a),writeUInt16(e,r),e.writeByte(o||0),e.writeByte(0)}function encodeLogicalScreenDescriptor(e,t,r,n,o=8){const a=128|o-1<<4|colorTableSize(n.length)-1;writeUInt16(e,t),writeUInt16(e,r),e.writeBytes([a,0,0])}function encodeNetscapeExt(e,t){e.writeByte(33),e.writeByte(255),e.writeByte(11),writeUTFBytes(e,"NETSCAPE2.0"),e.writeByte(3),e.writeByte(1),writeUInt16(e,t),e.writeByte(0)}function encodeColorTable(e,t){const r=1<<colorTableSize(t.length);for(let n=0;n<r;n++){let r=[0,0,0];n<t.length&&(r=t[n]),e.writeByte(r[0]),e.writeByte(r[1]),e.writeByte(r[2])}}function encodeImageDescriptor(e,t,r,n){if(e.writeByte(44),writeUInt16(e,0),writeUInt16(e,0),writeUInt16(e,t),writeUInt16(e,r),n){const t=0,r=0,o=colorTableSize(n.length)-1;e.writeByte(128|t|r|o)}else e.writeByte(0)}function encodePixels(e,t,r,n,o=8,a,i,c){lzwEncode_default(r,n,t,o,e,a,i,c)}function writeUInt16(e,t){e.writeByte(255&t),e.writeByte(t>>8&255)}function writeUTFBytes(e,t){for(var r=0;r<t.length;r++)e.writeByte(t.charCodeAt(r))}function colorTableSize(e){return Math.max(Math.ceil(Math.log2(e)),1)}var src_default=GIFEncoder;
+    
+    // 导出到全局
+    global.gifenc = exports;
+})(window);
+    </script></script>
+    
+    <script>
+        // 全局变量
+        let spriteImage = null;
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let isPlaying = false;
+        let animationFrame = null;
+        let currentFrame = 0;
+        let lastFrameTime = 0;
+        let gifBlob = null;
+
+        // 精灵图配置
+        const GRID_SIZE = 4; // 4x4格子
+        const TOTAL_FRAMES = 16; // 总帧数
+
+        // DOM元素
+        const imageInput = document.getElementById('imageInput');
+        const fileName = document.getElementById('fileName');
+        const fpsSlider = document.getElementById('fpsSlider');
+        const fpsValue = document.getElementById('fpsValue');
+        const scaleSlider = document.getElementById('scaleSlider');
+        const scaleValue = document.getElementById('scaleValue');
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const generateBtn = document.getElementById('generateBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const status = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+
+        // 上传图片
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            fileName.textContent = `已选择: ${file.name}`;
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    spriteImage = img;
+                    initCanvas();
+                    showStatus('图片加载成功！可以开始播放和生成GIF', 'success');
+                    playBtn.disabled = false;
+                    pauseBtn.disabled = false;
+                    generateBtn.disabled = false;
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 初始化画布
+        function initCanvas() {
+            const scale = scaleSlider.value / 100;
+            const frameWidth = spriteImage.width / GRID_SIZE;
+            const frameHeight = spriteImage.height / GRID_SIZE;
+            
+            canvas.width = frameWidth * scale;
+            canvas.height = frameHeight * scale;
+            
+            drawFrame(0);
+        }
+
+        // 绘制指定帧
+        function drawFrame(frameIndex) {
+            if (!spriteImage) return;
+
+            const scale = scaleSlider.value / 100;
+            const frameWidth = spriteImage.width / GRID_SIZE;
+            const frameHeight = spriteImage.height / GRID_SIZE;
+            
+            // 计算当前帧在精灵图中的位置 (从左到右，从上到下)
+            const col = frameIndex % GRID_SIZE;
+            const row = Math.floor(frameIndex / GRID_SIZE);
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制当前帧
+            ctx.drawImage(
+                spriteImage,
+                col * frameWidth,
+                row * frameHeight,
+                frameWidth,
+                frameHeight,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+        }
+
+        // 动画循环
+        function animate(timestamp) {
+            if (!isPlaying) return;
+
+            const fps = parseInt(fpsSlider.value);
+            const frameDuration = 1000 / fps;
+
+            if (timestamp - lastFrameTime >= frameDuration) {
+                currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
+                drawFrame(currentFrame);
+                lastFrameTime = timestamp;
+            }
+
+            animationFrame = requestAnimationFrame(animate);
+        }
+
+        // 播放按钮
+        playBtn.addEventListener('click', function() {
+            if (!spriteImage) return;
+            isPlaying = true;
+            lastFrameTime = performance.now();
+            animationFrame = requestAnimationFrame(animate);
+            showStatus('正在播放动画...', 'info');
+        });
+
+        // 暂停按钮
+        pauseBtn.addEventListener('click', function() {
+            isPlaying = false;
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            showStatus('动画已暂停', 'info');
+        });
+
+        // FPS滑块
+        fpsSlider.addEventListener('input', function() {
+            fpsValue.textContent = this.value;
+        });
+
+        // 缩放滑块
+        scaleSlider.addEventListener('input', function() {
+            scaleValue.textContent = this.value + '%';
+            if (spriteImage) {
+                initCanvas();
+            }
+        });
+
+        // 生成GIF
+        generateBtn.addEventListener('click', async function() {
+            if (!spriteImage) return;
+
+            // 暂停当前播放
+            isPlaying = false;
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+
+            showStatus('正在生成GIF，请稍候...', 'info');
+            progressBar.classList.remove('hidden');
+            progressFill.style.width = '0%';
+            generateBtn.disabled = true;
+
+            try {
+                await generateGIF();
+            } catch (error) {
+                console.error('生成GIF失败:', error);
+                showStatus('生成失败: ' + error.message, 'error');
+                progressBar.classList.add('hidden');
+                generateBtn.disabled = false;
+            }
+        });
+
+        // 使用 gifenc 库生成 GIF
+        async function generateGIF() {
+            // 检查库是否加载
+            if (typeof gifenc === 'undefined') {
+                throw new Error('GIF编码库未加载');
+            }
+
+            const fps = parseInt(fpsSlider.value);
+            const scale = scaleSlider.value / 100;
+            const frameWidth = Math.floor(spriteImage.width / GRID_SIZE);
+            const frameHeight = Math.floor(spriteImage.height / GRID_SIZE);
+            const width = Math.floor(frameWidth * scale);
+            const height = Math.floor(frameHeight * scale);
+
+            // 创建 GIF 编码器
+            const gif = gifenc.GIFEncoder();
+
+            // 创建临时画布用于生成帧
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = width;
+            tempCanvas.height = height;
+            const tempCtx = tempCanvas.getContext('2d');
+
+            // 添加所有帧
+            for (let i = 0; i < TOTAL_FRAMES; i++) {
+                const col = i % GRID_SIZE;
+                const row = Math.floor(i / GRID_SIZE);
+                
+                // 清空临时画布
+                tempCtx.clearRect(0, 0, width, height);
+                
+                // 绘制当前帧
+                tempCtx.drawImage(
+                    spriteImage,
+                    col * frameWidth,
+                    row * frameHeight,
+                    frameWidth,
+                    frameHeight,
+                    0,
+                    0,
+                    width,
+                    height
+                );
+                
+                // 获取帧数据
+                const imageData = tempCtx.getImageData(0, 0, width, height);
+                const palette = gifenc.quantize(imageData.data, 256);
+                const index = gifenc.applyPalette(imageData.data, palette);
+                
+                // 添加帧
+                gif.writeFrame(index, width, height, {
+                    palette: palette,
+                    delay: Math.floor(100 / fps) * 10, // centiseconds
+                });
+                
+                // 更新进度
+                const progress = ((i + 1) / TOTAL_FRAMES) * 100;
+                progressFill.style.width = progress + '%';
+                showStatus(`正在生成GIF... ${Math.round(progress)}%`, 'info');
+                
+                // 让浏览器有机会更新UI
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+
+            // 完成编码
+            gif.finish();
+
+            // 获取 GIF 数据
+            const buffer = gif.bytes();
+            gifBlob = new Blob([buffer], { type: 'image/gif' });
+
+            console.log('GIF生成成功，大小:', gifBlob.size, 'bytes');
+            showStatus('GIF生成成功！点击下载按钮保存', 'success');
+            progressBar.classList.add('hidden');
+            downloadBtn.classList.remove('hidden');
+            generateBtn.disabled = false;
+        }
+
+        // 下载GIF
+        downloadBtn.addEventListener('click', function() {
+            if (!gifBlob) {
+                showStatus('没有可下载的GIF，请先生成', 'error');
+                return;
+            }
+            
+            try {
+                const url = URL.createObjectURL(gifBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sprite-animation-' + Date.now() + '.gif';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                
+                // 延迟清理，确保下载开始
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+                showStatus('GIF下载已开始！', 'success');
+                console.log('GIF下载触发成功');
+            } catch (error) {
+                console.error('下载失败:', error);
+                showStatus('下载失败: ' + error.message, 'error');
+            }
+        });
+
+        // 显示状态信息
+        function showStatus(message, type) {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.classList.remove('hidden');
+        }
+
+        // 检查是否从步骤1跳转过来
+        const savedSpriteUrl = sessionStorage.getItem('sprite_image_url');
+        if (savedSpriteUrl) {
+            // 自动加载精灵图
+            fetch(savedSpriteUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                    const file = new File([blob], 'sprite.png', { type: 'image/png' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    imageInput.files = dataTransfer.files;
+                    
+                    // 触发文件加载
+                    const img = new Image();
+                    img.onload = function() {
+                        spriteImage = img;
+                        initCanvas();
+                        showStatus('精灵图已加载，可以开始制作动画！', 'success');
+                        playBtn.disabled = false;
+                        pauseBtn.disabled = false;
+                        generateBtn.disabled = false;
+                        fileName.textContent = `已加载精灵图: sprite.png`;
+                    };
+                    img.src = savedSpriteUrl;
+                    
+                    // 清除 sessionStorage
+                    sessionStorage.removeItem('sprite_image_url');
+                })
+                .catch(error => {
+                    console.error('加载精灵图失败:', error);
+                    showStatus('精灵图加载失败，请手动上传', 'error');
+                });
+        }
+    </script>
+</body>
+</html>

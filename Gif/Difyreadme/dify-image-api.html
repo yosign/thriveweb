@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dify 图生图工具 - Nanobanana Pro</title>
+    <link rel="stylesheet" href="./dify-api-styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <div class="logo-icon">🍌</div>
+                <h1>Nanobanana Pro</h1>
+            </div>
+            <p class="subtitle">图生图工具流 - Image to Image Workflow</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Configuration Panel -->
+            <div class="config-panel">
+                <h2 class="section-title">
+                    <span class="icon">⚙️</span>
+                    API配置
+                </h2>
+
+                <div class="form-group">
+                    <label for="apiKey">
+                        <span>API Key</span>
+                        <span class="required">*</span>
+                    </label>
+                    <input type="password" id="apiKey" placeholder="请输入您的 Dify API Key" required>
+                    <small class="helper-text">从 Dify 控制台获取 API Key</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="apiEndpoint">
+                        <span>API Endpoint</span>
+                        <span class="required">*</span>
+                    </label>
+                    <input type="url" id="apiEndpoint" value="https://api.dify.ai/v1/chat-messages"
+                        placeholder="https://api.dify.ai/v1/chat-messages" required>
+                </div>
+            </div>
+
+            <!-- Input Section -->
+            <div class="input-section">
+                <h2 class="section-title">
+                    <span class="icon">📸</span>
+                    输入参数
+                </h2>
+
+                <form id="imageForm">
+                    <!-- Image Upload - Required -->
+                    <div class="form-group">
+                        <label for="inputImage">
+                            <span>上传图片 (inputimage)</span>
+                            <span class="required">*</span>
+                        </label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <input type="file" id="inputImage" accept="image/*" required hidden>
+                            <div class="upload-placeholder">
+                                <svg class="upload-icon" width="48" height="48" viewBox="0 0 24 24" fill="none">
+                                    <path
+                                        d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M17 8L12 3L7 8" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 3V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                                <p class="upload-text">点击或拖拽上传图片</p>
+                                <p class="upload-hint">支持 JPG, PNG, WEBP 格式</p>
+                            </div>
+                            <div class="image-preview" id="imagePreview" style="display: none;">
+                                <img id="previewImg" src="" alt="Preview">
+                                <button type="button" class="remove-btn" id="removeImage">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prompt - Required -->
+                    <div class="form-group">
+                        <label for="prompt">
+                            <span>提示词 (prompt)</span>
+                            <span class="required">*</span>
+                        </label>
+                        <textarea id="prompt" rows="4" placeholder="描述您想要生成的图片风格或效果..." required></textarea>
+                        <div class="char-count">
+                            <span id="promptCount">0</span> / 1000
+                        </div>
+                    </div>
+
+                    <!-- Size - Required -->
+                    <div class="form-group">
+                        <label for="size">
+                            <span>图片尺寸 (size)</span>
+                            <span class="required">*</span>
+                        </label>
+                        <select id="size" required>
+                            <option value="">请选择尺寸</option>
+                            <option value="1K">1K</option>
+                            <option value="2K">2K</option>
+                            <option value="4K">4K</option>
+                        </select>
+                    </div>
+
+                    <!-- Aspect Ratio - Optional -->
+                    <div class="form-group">
+                        <label for="aspectRatio">
+                            <span>宽高比 (aspect_ratio)</span>
+                            <span class="optional">可选 - 默认自动</span>
+                        </label>
+                        <select id="aspectRatio">
+                            <option value="" selected>自动</option>
+                            <option value="1:1">1:1</option>
+                            <option value="16:9">16:9</option>
+                            <option value="9:16">9:16</option>
+                            <option value="4:3">4:3</option>
+                            <option value="3:4">3:4</option>
+                        </select>
+                    </div>
+
+                    <!-- User Input Query - Optional -->
+                    <div class="form-group">
+                        <label for="userQuery">
+                            <span>用户查询 (userinput.query)</span>
+                            <span class="optional">可选</span>
+                        </label>
+                        <input type="text" id="userQuery" placeholder="输入额外的查询参数...">
+                    </div>
+
+                    <!-- Additional Files - Optional -->
+                    <div class="form-group">
+                        <label for="userFiles">
+                            <span>附加文件 (userinput.files)</span>
+                            <span class="optional">可选</span>
+                        </label>
+                        <input type="file" id="userFiles" multiple accept="image/*">
+                        <small class="helper-text">可以上传多个参考图片</small>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit" id="submitBtn">
+                        <span class="btn-text">开始生成</span>
+                        <span class="btn-loader" style="display: none;">
+                            <svg class="spinner" viewBox="0 0 50 50">
+                                <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5">
+                                </circle>
+                            </svg>
+                            处理中...
+                        </span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Result Section -->
+            <div class="result-section" id="resultSection" style="display: none;">
+                <h2 class="section-title">
+                    <span class="icon">✨</span>
+                    生成结果
+                </h2>
+                <div class="result-content" id="resultContent">
+                    <!-- Results will be displayed here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by <strong>Dify AI</strong> • Nanobanana Pro Workflow</p>
+        </footer>
+    </div>
+
+    <script src="./dify-api-script.js"></script>
+</body>
+
+</html>
